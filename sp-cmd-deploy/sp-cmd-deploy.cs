@@ -33,6 +33,9 @@ namespace SP.Cmd.Deploy
         [Option("retract", HelpText = "Sets to retract the solution")]
         public bool retract { get; set; }
 
+        [Option("execute", HelpText = "Executs the solution")]
+        public bool execute { get; set; }
+
         [HelpOption(HelpText = "Command line helper")]
         public string GetUsage()
         {
@@ -57,7 +60,7 @@ namespace SP.Cmd.Deploy
     }
     public static class SharePoint
     {
-        public static void CmdDeploy(string[] args, string SolutionDescription, Action<SPDeployOptions> DeployFunction, Action<SPDeployOptions> RetractFunction)
+        public static void CmdExecute(string[] args, string SolutionDescription, Action<SPDeployOptions> DeployFunction, Action<SPDeployOptions> RetractFunction, Action<SPDeployOptions> ExecuteFunction)
         {
             var options = new SPDeployOptions(SolutionDescription);
             if (Parser.Default.ParseArguments(args, options))
@@ -79,22 +82,26 @@ namespace SP.Cmd.Deploy
                         }
                     }
 
-                    if (options.deploy)
+                    if ((options.deploy) && (DeployFunction != null))
                     {
                         DeployFunction(options);
                     }
-                    if (options.retract)
+                    if ((options.retract)&&(RetractFunction != null))
                     {
                         RetractFunction(options);
+                    }
+                    if ((options.execute) && (ExecuteFunction != null))
+                    {
+                        ExecuteFunction(options);
                     }
                 }
             }
         }
-        public static void ExecuteSharepoint(string url, Action<ClientContext> Code)
+        public static void Session(string url, Action<ClientContext> Code)
         {
-            SharePoint.ExecuteSharepoint(url, null, Code);
+            SharePoint.Session(url, null, Code);
         }
-        public static void ExecuteSharepoint(string url, ICredentials Credential, Action<ClientContext> Code)
+        public static void Session(string url, ICredentials Credential, Action<ClientContext> Code)
         {
             using (var clientContext = new ClientContext(url))
             {
