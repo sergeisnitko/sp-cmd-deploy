@@ -36,10 +36,9 @@ namespace SP.Cmd.Deploy
         [HelpOption(HelpText = "Command line helper")]
         public string GetUsage()
         {
-            var usage = @"
-                To use this solution there are some keys\n
-                --url SharePoint site url
-            ";
+            var usage = @"To use this solution there are some keys\n" +
+                "--url SharePoint site url";
+
             return this.SolutionDescription + "\n"+usage;
         }
 
@@ -66,17 +65,17 @@ namespace SP.Cmd.Deploy
                 var t = "";
                 if (options.url.Length > 0)
                 {
-                    ICredentials Credential = null;
-
                     if ((!String.IsNullOrEmpty(options.login)) && (!String.IsNullOrEmpty(options.password)))
                     {
-                        Credential = new NetworkCredential(options.login, options.password, options.domain);
-
                         if (options.spo)
                         {
                             var SecurePassword = new SecureString();
                             foreach (char c in options.password.ToCharArray()) SecurePassword.AppendChar(c);
-                            Credential = new SharePointOnlineCredentials(options.login, SecurePassword);
+                            options.Credentials = new SharePointOnlineCredentials(options.login, SecurePassword);
+                        }
+                        else
+                        {
+                            options.Credentials = new NetworkCredential(options.login, options.password, options.domain);
                         }
                     }
 
