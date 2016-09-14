@@ -6,6 +6,9 @@ The main idea of the solution is to help to execute custom code in SharePoint in
 
 **It is not a compiled application. It is a library!**
 
+![gif](https://raw.githubusercontent.com/sergeisnitko/sergeisnitko.github.io/master/repos/sp-cmd-deploy/sp-cmd-deploy.gif)
+
+
 # How to install
 You can download sources and add a class to you project or download release library and add it like a reference in the project (and additional libraries), but the best solution is to use [nuget sp-cmd-deploy](https://www.nuget.org/packages/sp-cmd-deploy/)
 ```
