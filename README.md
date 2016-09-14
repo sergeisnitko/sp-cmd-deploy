@@ -79,7 +79,7 @@ The *options* are filled by arguments of the command line of the solution
 
 # The example of usage in project
 
-The full example you can find ![here](https://github.com/sergeisnitko/spf-fieldsettings)
+The full example you can find [here](https://github.com/sergeisnitko/spf-fieldsettings)
 
 ## Model.cs
 ``` c
