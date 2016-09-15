@@ -6,7 +6,7 @@ The main idea of the solution is to help to execute custom code in SharePoint in
 
 **It is not a compiled application. It is a library!**
 
-![gif](https://raw.githubusercontent.com/sergeisnitko/sergeisnitko.github.io/master/repos/sp-cmd-deploy/sp-cmd-deploy.gif)
+![gif](https://sergeisnitko.github.io/repos/sp-cmd-deploy/sp-cmd-deploy.gif)
 
 
 # How to install
