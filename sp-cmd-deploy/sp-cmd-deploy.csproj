@@ -96,6 +96,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="sp-deploy-options.cs" />
+    <Compile Include="sp-simple-aes.cs" />
     <Compile Include="sp-cmd-deploy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

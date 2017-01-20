@@ -10,56 +10,28 @@ using System.Threading.Tasks;
 
 namespace SP.Cmd.Deploy
 {
-    public class SPDeployOptions
-    {
-        [Option("url", Required = true, HelpText = "SharePoint site url")]
-        public string url { get; set; }
-
-        [Option("login", HelpText = "User login name")]
-        public string login { get; set; }
-
-        [Option("password", HelpText = "User password")]
-        public string password { get; set; }
-
-        [Option("domain", HelpText = "User domain")]
-        public string domain { get; set; }
-
-        [Option("spo", HelpText = "Set helper for ")]
-        public bool spo { get; set; }
-
-        [Option("deploy", HelpText = "Sets to deploy the solution")]
-        public bool deploy { get; set; }
-
-        [Option("retract", HelpText = "Sets to retract the solution")]
-        public bool retract { get; set; }
-
-        [Option("execute", HelpText = "Executs the solution")]
-        public bool execute { get; set; }
-
-        [HelpOption(HelpText = "Command line helper")]
-        public string GetUsage()
-        {
-            var usage = @"To use this solution there are some keys\n" +
-                "--url SharePoint site url";
-
-            return this.SolutionDescription + "\n"+usage;
-        }
-
-        public ICredentials Credentials { get; set; }
-        public string SolutionDescription { get; set; }
-
-
-        public SPDeployOptions()
-        {
-
-        }
-        public SPDeployOptions(string SolutionDescription)
-        {
-            this.SolutionDescription = SolutionDescription;
-        }
-    }
     public static class SharePoint
     {
+        public static string EncryptString(string Text)
+        {
+            return (new SpSimpleAES()).EncryptToString(Text);
+        }
+
+        public static void Exec(string[] args, Action<SPDeployOptions> ExecuteFunction)
+        {
+            CmdExecute(args, "", null, null, ExecuteFunction);
+        }
+
+        public static void Exec(string[] args, Action<SPDeployOptions> ExecuteFunction, Action<SPDeployOptions> DeployFunction)
+        {
+            CmdExecute(args, "", DeployFunction, null, ExecuteFunction);
+        }
+
+        public static void Exec(string[] args, Action<SPDeployOptions> ExecuteFunction, Action<SPDeployOptions> DeployFunction, Action<SPDeployOptions> RetractFunction)
+        {
+            CmdExecute(args, "", DeployFunction, RetractFunction, ExecuteFunction);
+        }
+
         public static void CmdExecute(string[] args, string SolutionDescription, Action<SPDeployOptions> DeployFunction, Action<SPDeployOptions> RetractFunction, Action<SPDeployOptions> ExecuteFunction)
         {
             var options = new SPDeployOptions(SolutionDescription);
@@ -70,6 +42,10 @@ namespace SP.Cmd.Deploy
                 {
                     if ((!String.IsNullOrEmpty(options.login)) && (!String.IsNullOrEmpty(options.password)))
                     {
+                        if (!options.plain)
+                        {
+                            options.password = (new SpSimpleAES()).DecryptString(options.password);
+                        }
                         if (options.spo)
                         {
                             var SecurePassword = new SecureString();
@@ -82,18 +58,23 @@ namespace SP.Cmd.Deploy
                         }
                     }
 
-                    if ((options.deploy) && (DeployFunction != null))
+                    SharePoint.Session(options.url, options.Credentials, ctx =>
                     {
-                        DeployFunction(options);
-                    }
-                    if ((options.retract)&&(RetractFunction != null))
-                    {
-                        RetractFunction(options);
-                    }
-                    if ((options.execute) && (ExecuteFunction != null))
-                    {
-                        ExecuteFunction(options);
-                    }
+                        options.Context = ctx;
+
+                        if ((options.deploy) && (DeployFunction != null))
+                        {
+                            DeployFunction(options);
+                        }
+                        if ((options.retract) && (RetractFunction != null))
+                        {
+                            RetractFunction(options);
+                        }
+                        if ((options.execute) && (ExecuteFunction != null))
+                        {
+                            ExecuteFunction(options);
+                        }
+                    });
                 }
             }
         }
