@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace SP.Cmd.Deploy
 {
+
     public static class SharePoint
     {
         public static string EncryptString(string Text)
