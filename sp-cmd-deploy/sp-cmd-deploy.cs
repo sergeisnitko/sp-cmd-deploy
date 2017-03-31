@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using Microsoft.SharePoint.Client;
+using sp_cmd_deploy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,8 +39,17 @@ namespace SP.Cmd.Deploy
             if (Parser.Default.ParseArguments(args, options))
             {
                 var t = "";
+
+                options = sp_deploy_settings.GetSettings(options);
+
+
                 if (options.url.Length > 0)
                 {
+                    if (options.url.IndexOf(".sharepoint.com") != -1)
+                    {
+                        options.spo = true;
+                    }
+
                     if ((!String.IsNullOrEmpty(options.login)) && (!String.IsNullOrEmpty(options.password)))
                     {
                         if (!options.plain)
