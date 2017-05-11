@@ -34,6 +34,12 @@ namespace SP.Cmd.Deploy
         [Option("domain", HelpText = "User domain")]
         public string domain { get; set; }
 
+        [Option("relyingParty", HelpText = "ADFS relying party")]
+        public string relyingParty { get; set; }
+
+        [Option("ADFSUrl", HelpText = "ADFS Url")]
+        public string ADFSUrl { get; set; }
+
         [XmlIgnore]
         [Option("spo", HelpText = "Set helper for ")]
         public bool spo { get; set; }

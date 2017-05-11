@@ -69,7 +69,7 @@ namespace SP.Cmd.Deploy
                         }
                     }
 
-                    SharePoint.Session(options.url, options.Credentials, ctx =>
+                    SharePoint.Session(options, ctx =>
                     {
                         options.Context = ctx;
 
@@ -89,20 +89,29 @@ namespace SP.Cmd.Deploy
                 }
             }
         }
-        public static void Session(string url, Action<ClientContext> Code)
-        {
-            SharePoint.Session(url, null, Code);
-        }
-        public static void Session(string url, ICredentials Credential, Action<ClientContext> Code)
-        {
-            using (var clientContext = new ClientContext(url))
-            {
-                if (Credential != null)
-                {
-                    clientContext.Credentials = Credential;
-                }
 
-                Code(clientContext);
+        public static void Session(SPDeployOptions options, Action<ClientContext> Code)
+        {
+
+            if (!String.IsNullOrEmpty(options.ADFSUrl))
+            {
+                OfficeDevPnP.Core.AuthenticationManager am = new OfficeDevPnP.Core.AuthenticationManager();
+                using (var clientContext = am.GetADFSUserNameMixedAuthenticatedContext(options.url, options.login, options.password, options.domain, options.ADFSUrl, options.relyingParty))
+                {
+                    Code(clientContext);
+                }
+            }
+            else
+            {
+                using (var clientContext = new ClientContext(options.url))
+                {
+                    if (options.Credentials != null)
+                    {
+                        clientContext.Credentials = options.Credentials;
+                    }
+
+                    Code(clientContext);
+                }
             }
         }
     }
