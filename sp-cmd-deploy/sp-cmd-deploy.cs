@@ -19,22 +19,12 @@ namespace SP.Cmd.Deploy
             return (new SpSimpleAES()).EncryptToString(Text);
         }
 
-        public static void Exec(string[] args, Action<SPDeployOptions> ExecuteFunction)
+        public static void Exec(string[] args, SPFunctions Functions)
         {
-            CmdExecute(args, "", null, null, ExecuteFunction);
+            CmdExecute(args, "", Functions);
         }
-
-        public static void Exec(string[] args, Action<SPDeployOptions> ExecuteFunction, Action<SPDeployOptions> DeployFunction)
-        {
-            CmdExecute(args, "", DeployFunction, null, ExecuteFunction);
-        }
-
-        public static void Exec(string[] args, Action<SPDeployOptions> ExecuteFunction, Action<SPDeployOptions> DeployFunction, Action<SPDeployOptions> RetractFunction)
-        {
-            CmdExecute(args, "", DeployFunction, RetractFunction, ExecuteFunction);
-        }
-
-        public static void CmdExecute(string[] args, string SolutionDescription, Action<SPDeployOptions> DeployFunction, Action<SPDeployOptions> RetractFunction, Action<SPDeployOptions> ExecuteFunction)
+        
+        public static void CmdExecute(string[] args, string SolutionDescription, SPFunctions Functions)
         {
             var options = new SPDeployOptions(SolutionDescription);
             if (Parser.Default.ParseArguments(args, options))
@@ -73,18 +63,16 @@ namespace SP.Cmd.Deploy
                     {
                         options.Context = ctx;
 
-                        if ((options.deploy) && (DeployFunction != null))
+                        var FunctionsToExecute = options.ExecuteParams.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                        FunctionsToExecute.ForEach(FunctionName =>
                         {
-                            DeployFunction(options);
-                        }
-                        if ((options.retract) && (RetractFunction != null))
-                        {
-                            RetractFunction(options);
-                        }
-                        if ((options.execute) && (ExecuteFunction != null))
-                        {
-                            ExecuteFunction(options);
-                        }
+                            var Function = Functions.Where(k => k.Key.ToLower() == FunctionName.ToLower()).FirstOrDefault();
+                            if (Function.Value != null)
+                            {
+                                Function.Value(options);
+                            }
+                        });
                     });
                 }
             }
@@ -96,8 +84,21 @@ namespace SP.Cmd.Deploy
             if (!String.IsNullOrEmpty(options.ADFSUrl))
             {
                 OfficeDevPnP.Core.AuthenticationManager am = new OfficeDevPnP.Core.AuthenticationManager();
-                using (var clientContext = am.GetADFSUserNameMixedAuthenticatedContext(options.url, options.login, options.password, options.domain, options.ADFSUrl, options.relyingParty))
+                using (var clientContext = am.GetADFSUserNameMixedAuthenticatedContext(options.url, options.login, options.password, options.domain, options.ADFSUrl, options.relyingParty, 600))
                 {
+                    var StartedDate = DateTime.Now;
+                    clientContext.ExecutingWebRequest += delegate (object oSender, WebRequestEventArgs webRequestEventArgs)
+                    {
+                        var CurrentTime = DateTime.Now;
+                        var DateDiff = (CurrentTime - StartedDate).TotalMinutes;
+
+                        if (DateDiff > 5)
+                        {
+                            StartedDate = DateTime.Now;
+                            am.RefreshADFSUserNameMixedAuthenticatedContext(options.url, options.login, options.password, options.domain, options.ADFSUrl, options.relyingParty);
+                        }                        
+                    };
+
                     Code(clientContext);
                 }
             }

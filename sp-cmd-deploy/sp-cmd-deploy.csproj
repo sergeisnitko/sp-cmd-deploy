@@ -131,6 +131,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configs\sp-deploy-functions.cs" />
     <Compile Include="Configs\sp-deploy-settings.cs" />
     <Compile Include="Configs\sp-deploy-options.cs" />
     <Compile Include="Encrypt\sp-simple-aes.cs" />

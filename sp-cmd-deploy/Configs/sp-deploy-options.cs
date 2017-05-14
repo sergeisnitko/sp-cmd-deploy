@@ -14,10 +14,6 @@ namespace SP.Cmd.Deploy
     [Serializable]
     public class SPDeployOptions: IDisposable
     {
-        [XmlIgnore]
-        [Option("inlineparams", HelpText = "Inline params for application")]
-        public bool inlineparams { get; set; }
-
         [Option("url", HelpText = "SharePoint site url")]
         public string url { get; set; }
 
@@ -40,6 +36,13 @@ namespace SP.Cmd.Deploy
         [Option("ADFSUrl", HelpText = "ADFS Url")]
         public string ADFSUrl { get; set; }
 
+        [Option("ExecuteParams", HelpText = "Enter the keys of functions to execute with a space like a delimiter")]
+        public string ExecuteParams { get; set; }
+
+        [XmlIgnore]
+        [Option("inlineparams", HelpText = "Inline params for application next time")]
+        public bool inlineparams { get; set; }
+
         [XmlIgnore]
         [Option("spo", HelpText = "Set helper for ")]
         public bool spo { get; set; }
@@ -48,13 +51,20 @@ namespace SP.Cmd.Deploy
         [Option("plain", HelpText = "Use the password as plain")]
         public bool plain { get; set; }
 
+
         [Option("deploy", HelpText = "Execute function to deploy the solution (Y[es]/N[o])")]
+        [Obsolete("This method is deprecated. Use ExecuteParams instead")]
+        [XmlIgnore]
         public bool deploy { get; set; }
 
         [Option("retract", HelpText = "Execute function to retract the solution (Y[es]/N[o])")]
+        [Obsolete("This method is deprecated. Use ExecuteParams instead")]
+        [XmlIgnore]
         public bool retract { get; set; }
 
         [Option("execute", HelpText = "Executes the solution (Y[es]/N[o])")]
+        [Obsolete("This method is deprecated. Use ExecuteParams instead")]
+        [XmlIgnore]
         public bool execute { get; set; }
 
         [HelpOption(HelpText = "Command line helper")]

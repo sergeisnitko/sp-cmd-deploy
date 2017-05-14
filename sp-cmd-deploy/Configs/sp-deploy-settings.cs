@@ -93,6 +93,12 @@ namespace sp_cmd_deploy
                     {
                         if (SyncProp.Name.ToLower() == "password")
                         {
+                            if (!String.IsNullOrEmpty((string)Value))
+                            {
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.Write(" (" + Value + ")");
+                                Console.ResetColor();
+                            }
                             Console.Write(": ");
 
                             var ConsoleValue = GetPassword();
@@ -101,6 +107,14 @@ namespace sp_cmd_deploy
                             {
                                 var Decrypted = (new SpSimpleAES()).DecryptString(ConsoleValue);
                                 Encrypted = (new SpSimpleAES()).EncryptToString(Decrypted);
+                            }
+                            else
+                            {
+                                if (!String.IsNullOrEmpty((string)Value))
+                                {
+                                    var Decrypted = (new SpSimpleAES()).DecryptString((string)Value);
+                                    Encrypted = (new SpSimpleAES()).EncryptToString(Decrypted);
+                                }
                             }
                             SyncProp.SetValue(StartParams, Encrypted);
                             Console.WriteLine();
