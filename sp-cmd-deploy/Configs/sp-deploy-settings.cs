@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,9 @@ namespace sp_cmd_deploy
 {
     public static class sp_deploy_settings
     {
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetConsoleWindow();
+
         private static string SettingsFileName = "configs//sp-cmd-config.xml";
 
         public static List<System.Reflection.PropertyInfo> GetPropsToSync()
@@ -56,86 +60,102 @@ namespace sp_cmd_deploy
         {
             var SyncProps = GetPropsToSync();
             var StartParams = GetStartParams(options);
-            if (StartParams.inlineparams)
+
+            if (GetConsoleWindow() != IntPtr.Zero)
             {
-                foreach (var SyncProp in SyncProps)
+                if (StartParams.inlineparams)
                 {
-                    var HelpTextString = SyncProp.Name;
-                    var Value = SyncProp.GetValue(StartParams, null);
-
-                    var Attribute = SyncProp.CustomAttributes.Where(a => a.AttributeType == typeof(CommandLine.OptionAttribute)).FirstOrDefault();
-                    if (Attribute != null)
+                    foreach (var SyncProp in SyncProps)
                     {
-                        var HelpText = Attribute.NamedArguments.Where(a => a.MemberName == "HelpText").FirstOrDefault();
+                        var HelpTextString = SyncProp.Name;
+                        var Value = SyncProp.GetValue(StartParams, null);
 
-                        if (HelpText != null)
+                        var Attribute = SyncProp.CustomAttributes.Where(a => a.AttributeType == typeof(CommandLine.OptionAttribute)).FirstOrDefault();
+                        if (Attribute != null)
                         {
-                            HelpTextString = HelpText.TypedValue.ToString();
-                        }
+                            var HelpText = Attribute.NamedArguments.Where(a => a.MemberName == "HelpText").FirstOrDefault();
 
-                    }
-                    Console.Write(HelpTextString);
-
-                    if (SyncProp.PropertyType == typeof(Boolean))
-                    {
-                        var SavedValueBool = Convert.ToBoolean(Value);
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.Write(" (" + (SavedValueBool ? "Y" : "N") + ")");
-                        Console.ResetColor();
-                        Console.Write(": ");
-
-                        var ConsoleValue = Console.ReadLine();
-                        var SaveValueBool = (ConsoleValue.ToLower() == "y") ? true : ((ConsoleValue.ToLower() == "n") ? false : SavedValueBool);
-
-                        SyncProp.SetValue(StartParams, SaveValueBool);
-                    }
-                    else
-                    {
-                        if (SyncProp.Name.ToLower() == "password")
-                        {
-                            if (!String.IsNullOrEmpty((string)Value))
+                            if (HelpText != null)
                             {
-                                Console.ForegroundColor = ConsoleColor.Green;
-                                Console.Write(" (" + Value + ")");
-                                Console.ResetColor();
+                                HelpTextString = HelpText.TypedValue.ToString();
                             }
+
+                        }
+                        Console.Write(HelpTextString);
+
+                        if (SyncProp.PropertyType == typeof(Boolean))
+                        {
+                            var SavedValueBool = Convert.ToBoolean(Value);
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.Write(" (" + (SavedValueBool ? "Y" : "N") + ")");
+                            Console.ResetColor();
                             Console.Write(": ");
 
-                            var ConsoleValue = GetPassword();
-                            var Encrypted = ConsoleValue;
-                            if (Encrypted.Trim().Length > 0)
+                            var ConsoleValue = Console.ReadLine();
+                            if (ConsoleValue == null)
                             {
-                                var Decrypted = (new SpSimpleAES()).DecryptString(ConsoleValue);
-                                Encrypted = (new SpSimpleAES()).EncryptToString(Decrypted);
+                                ConsoleValue = "";
+                            }
+                            var SaveValueBool = (ConsoleValue.ToLower() == "y") ? true : ((ConsoleValue.ToLower() == "n") ? false : SavedValueBool);
+
+                            SyncProp.SetValue(StartParams, SaveValueBool);
+                        }
+                        else
+                        {
+                            if (SyncProp.Name.ToLower() == "password")
+                            {
+                                if (!String.IsNullOrEmpty((string)Value))
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.Write(" (" + Value + ")");
+                                    Console.ResetColor();
+                                }
+                                Console.Write(": ");
+
+                                var ConsoleValue = GetPassword();
+                                if (ConsoleValue == null)
+                                {
+                                    ConsoleValue = "";
+                                }
+                                var Encrypted = ConsoleValue;
+                                if (Encrypted.Trim().Length > 0)
+                                {
+                                    var Decrypted = (new SpSimpleAES()).DecryptString(ConsoleValue);
+                                    Encrypted = (new SpSimpleAES()).EncryptToString(Decrypted);
+                                }
+                                else
+                                {
+                                    if (!String.IsNullOrEmpty((string)Value))
+                                    {
+                                        var Decrypted = (new SpSimpleAES()).DecryptString((string)Value);
+                                        Encrypted = (new SpSimpleAES()).EncryptToString(Decrypted);
+                                    }
+                                }
+                                SyncProp.SetValue(StartParams, Encrypted);
+                                Console.WriteLine();
                             }
                             else
                             {
                                 if (!String.IsNullOrEmpty((string)Value))
                                 {
-                                    var Decrypted = (new SpSimpleAES()).DecryptString((string)Value);
-                                    Encrypted = (new SpSimpleAES()).EncryptToString(Decrypted);
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.Write(" (" + Value + ")");
+                                    Console.ResetColor();
                                 }
-                            }
-                            SyncProp.SetValue(StartParams, Encrypted);
-                            Console.WriteLine();
-                        }
-                        else
-                        {
-                            if (!String.IsNullOrEmpty((string)Value))
-                            {
-                                Console.ForegroundColor = ConsoleColor.Green;
-                                Console.Write(" (" + Value + ")");
-                                Console.ResetColor();
-                            }
-                            Console.Write(": ");
+                                Console.Write(": ");
 
-                            var ConsoleValue = Console.ReadLine();
-                            ConsoleValue = ConsoleValue.Length > 0 ? ConsoleValue : (string)Value;
+                                var ConsoleValue = Console.ReadLine();
+                                if (ConsoleValue == null)
+                                {
+                                    ConsoleValue = "";
+                                }
+                                ConsoleValue = ConsoleValue.Length > 0 ? ConsoleValue : (string)Value;
 
-                            SyncProp.SetValue(StartParams, ConsoleValue);
+                                SyncProp.SetValue(StartParams, ConsoleValue);
+                            }
                         }
                     }
-                }                
+                }
             }
             SaveSettings(StartParams);
             return StartParams;
