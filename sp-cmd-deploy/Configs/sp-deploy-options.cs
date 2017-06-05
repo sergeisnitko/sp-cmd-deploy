@@ -21,6 +21,10 @@ namespace SP.Cmd.Deploy
         [Option("encrypt", HelpText = "Encrypt the string")]
         public string encrypt { get; set; }
 
+        [XmlIgnore]
+        [Option("settings", HelpText = "Settings file name")]
+        public string Settings { get; set; }
+
         [Option("login", HelpText = "User login name")]
         public string login { get; set; }
 
@@ -35,6 +39,12 @@ namespace SP.Cmd.Deploy
 
         [Option("ADFSUrl", HelpText = "ADFS Url")]
         public string ADFSUrl { get; set; }
+
+        [Option("ClientId", HelpText = "SharePoint App ClientId")]
+        public string ClientId { get; set; }
+
+        [Option("ClientSecret", HelpText = "SharePoint App ClientSecret")]
+        public string ClientSecret { get; set; }
 
         [Option("ExecuteParams", HelpText = "Enter the keys of functions to execute with a space like a delimiter")]
         public string ExecuteParams { get; set; }

@@ -28,7 +28,7 @@ namespace sp_cmd_deploy
             var Result = new SPDeployOptions();
 
             var SyncProps = GetPropsToSync();
-            var SavedOptions = LoadSettings();
+            var SavedOptions = LoadSettings(options);
             var InlineParams = options.inlineparams;
             if (SavedOptions == null)
             {
@@ -209,12 +209,17 @@ namespace sp_cmd_deploy
             }
         }
 
-        public static SPDeployOptions LoadSettings()
-        {            
+        public static SPDeployOptions LoadSettings(SPDeployOptions RunSettings)
+        {
+            if (!String.IsNullOrEmpty(RunSettings.Settings))
+            {
+                SettingsFileName = "configs//" + RunSettings.Settings;
+            }
+
             if (System.IO.File.Exists(SettingsFileName))
             {
                 var Serializer = new XmlSerializer(typeof(SPDeployOptions));
-                var RunSettings = new SPDeployOptions();
+                //var RunSettings = new SPDeployOptions();
                 using (var Reader = new FileStream(SettingsFileName, FileMode.Open))
                 {
                     RunSettings = (SPDeployOptions)Serializer.Deserialize(Reader);

@@ -42,6 +42,7 @@
       <HintPath>packages\Microsoft.IdentityModel.6.1.7600.16394\lib\net35\Microsoft.IdentityModel.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.IdentityModel.Extensions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=69c3241e6f0468ca, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Office.Client.Education, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.SharePoint2013.CSOM.15.0.4711.1000\lib\net45\Microsoft.Office.Client.Education.dll</HintPath>
       <Private>True</Private>
@@ -135,6 +136,8 @@
     <Compile Include="Configs\sp-deploy-settings.cs" />
     <Compile Include="Configs\sp-deploy-options.cs" />
     <Compile Include="Encrypt\sp-simple-aes.cs" />
+    <Compile Include="SharePointApp\SharePointContext.cs" />
+    <Compile Include="SharePointApp\TokenHelper.cs" />
     <Compile Include="sp-cmd-deploy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

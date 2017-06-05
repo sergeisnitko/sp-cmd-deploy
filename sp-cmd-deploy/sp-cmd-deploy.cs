@@ -104,15 +104,28 @@ namespace SP.Cmd.Deploy
             }
             else
             {
-                using (var clientContext = new ClientContext(options.url))
+                //using (var clientContext = new ClientContext(options.url))
+                //{
+                var clientContext = new ClientContext(options.url);
+                if (options.Credentials != null)
                 {
-                    if (options.Credentials != null)
-                    {
-                        clientContext.Credentials = options.Credentials;
-                    }
-
-                    Code(clientContext);
+                    clientContext.Credentials = options.Credentials;
                 }
+
+                if ((!String.IsNullOrEmpty(options.ClientId)) && (!String.IsNullOrEmpty(options.ClientSecret)))
+                {
+                    TokenHelper.ClientId = options.ClientId;
+                    TokenHelper.ClientSecret = options.ClientSecret;
+
+                    var targetWeb = new Uri(options.url);
+                    string targetRealm = TokenHelper.GetRealmFromTargetUrl(targetWeb);
+                    var responseToken = TokenHelper.GetAppOnlyAccessToken(TokenHelper.SharePointPrincipal, targetWeb.Authority, targetRealm);
+                    clientContext = TokenHelper.GetClientContextWithAccessToken(targetWeb.ToString(), responseToken.AccessToken);
+                }
+
+                Code(clientContext);
+                clientContext.Dispose();
+                //}
             }
         }
     }
