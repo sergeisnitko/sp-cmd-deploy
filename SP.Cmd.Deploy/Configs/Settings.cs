@@ -1,17 +1,13 @@
-﻿using SP.Cmd.Deploy;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace sp_cmd_deploy
+namespace SP.Cmd.Deploy
 {
-    public static class sp_deploy_settings
+    public static class Settings
     {
         [DllImport("kernel32.dll")]
         static extern IntPtr GetConsoleWindow();
@@ -77,7 +73,7 @@ namespace sp_cmd_deploy
 
                             if (HelpText != null)
                             {
-                                HelpTextString = HelpText.TypedValue.ToString();
+                                HelpTextString = HelpText.TypedValue.ToString().Trim('"'); 
                             }
 
                         }
@@ -160,7 +156,6 @@ namespace sp_cmd_deploy
             SaveSettings(StartParams);
             return StartParams;
         }
- 
 
         public static String GetPassword()
         {
@@ -219,7 +214,6 @@ namespace sp_cmd_deploy
             if (System.IO.File.Exists(SettingsFileName))
             {
                 var Serializer = new XmlSerializer(typeof(SPDeployOptions));
-                //var RunSettings = new SPDeployOptions();
                 using (var Reader = new FileStream(SettingsFileName, FileMode.Open))
                 {
                     RunSettings = (SPDeployOptions)Serializer.Deserialize(Reader);
