@@ -1,12 +1,7 @@
 ﻿using CommandLine;
 using Microsoft.SharePoint.Client;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace SP.Cmd.Deploy
@@ -25,14 +20,15 @@ namespace SP.Cmd.Deploy
         [Option("settings", HelpText = "Settings file name")]
         public string Settings { get; set; }
 
+        [Option("domain", HelpText = "User domain")]
+        public string domain { get; set; }
+
         [Option("login", HelpText = "User login name")]
         public string login { get; set; }
 
         [Option("password", HelpText = "User password")]
         public string password { get; set; }
 
-        [Option("domain", HelpText = "User domain")]
-        public string domain { get; set; }
 
         [Option("relyingParty", HelpText = "ADFS relying party")]
         public string relyingParty { get; set; }

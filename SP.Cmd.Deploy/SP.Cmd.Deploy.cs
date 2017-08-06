@@ -1,13 +1,9 @@
 ﻿using CommandLine;
 using Microsoft.SharePoint.Client;
-using sp_cmd_deploy;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SP.Cmd.Deploy
 {
@@ -31,8 +27,7 @@ namespace SP.Cmd.Deploy
             {
                 var t = "";
 
-                options = sp_deploy_settings.GetSettings(options);
-
+                options = Settings.GetSettings(options);
 
                 if (options.url.Length > 0)
                 {
@@ -104,8 +99,6 @@ namespace SP.Cmd.Deploy
             }
             else
             {
-                //using (var clientContext = new ClientContext(options.url))
-                //{
                 var clientContext = new ClientContext(options.url);
                 if (options.Credentials != null)
                 {
@@ -125,7 +118,6 @@ namespace SP.Cmd.Deploy
 
                 Code(clientContext);
                 clientContext.Dispose();
-                //}
             }
         }
     }
