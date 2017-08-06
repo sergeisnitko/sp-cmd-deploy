@@ -3,8 +3,10 @@ using Microsoft.SharePoint.Client;
 using sp_cmd_deploy;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +16,8 @@ namespace SP.Cmd.Deploy
 
     public static class SharePoint
     {
+        public static string SystemPath = Path.GetDirectoryName((new System.Uri(Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath);
+
         public static string EncryptString(string Text)
         {
             return (new SpSimpleAES()).EncryptToString(Text);
@@ -80,6 +84,7 @@ namespace SP.Cmd.Deploy
 
         public static void Session(SPDeployOptions options, Action<ClientContext> Code)
         {
+            sp_deploy_settings.EchoCurrentParams(options);
 
             if (!String.IsNullOrEmpty(options.ADFSUrl))
             {

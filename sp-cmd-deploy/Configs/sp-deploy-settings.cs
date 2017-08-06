@@ -1,4 +1,5 @@
-﻿using SP.Cmd.Deploy;
+﻿using Newtonsoft.Json;
+using SP.Cmd.Deploy;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,12 +17,51 @@ namespace sp_cmd_deploy
         [DllImport("kernel32.dll")]
         static extern IntPtr GetConsoleWindow();
 
-        private static string SettingsFileName = "configs//sp-cmd-config.xml";
+        private static string SettingsFileName = Path.Combine(SharePoint.SystemPath,"configs\\sp-cmd-config.xml");
+        private static string SettingsJsonFileName = Path.Combine(SharePoint.SystemPath, "configs\\sp-cmd-config.json");
 
         public static List<System.Reflection.PropertyInfo> GetPropsToSync()
         {
             return typeof(SPDeployOptions).GetProperties().Where(p => p.CustomAttributes.Where(ca => ca.AttributeType == typeof(XmlIgnoreAttribute)).ToList().Count == 0).ToList();
         }
+
+        public static void EchoCurrentParams(SPDeployOptions options)
+        {
+            if (GetConsoleWindow() != IntPtr.Zero)
+            {
+                Console.Clear();
+
+                var SyncProps = GetPropsToSync();
+                var StartParams = GetStartParams(options);
+
+                foreach (var SyncProp in SyncProps)
+                {
+                    var HelpTextString = SyncProp.Name;
+                    var Value = SyncProp.GetValue(options, null);
+
+                    if ((SyncProp.Name.ToLower() != "password") && (Value != null))
+                    {
+                        var Attribute = SyncProp.CustomAttributes.Where(a => a.AttributeType == typeof(CommandLine.OptionAttribute)).FirstOrDefault();
+                        if (Attribute != null)
+                        {
+                            var HelpText = Attribute.NamedArguments.Where(a => a.MemberName == "HelpText").FirstOrDefault();
+
+                            if (HelpText != null)
+                            {
+                                HelpTextString = HelpText.TypedValue.ToString();
+                            }
+
+                        }
+                        Console.Write(HelpTextString + ": ");
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.Write(Value);
+                        Console.ResetColor();
+                        Console.WriteLine();
+                    }
+                }
+            }
+        }
+
 
         public static SPDeployOptions GetStartParams(SPDeployOptions options)
         {
@@ -189,10 +229,35 @@ namespace sp_cmd_deploy
             return pwd;
         }
 
+        public static string LoadDataFromFile(string SourcePath)
+        {
+            if (System.IO.File.Exists(SourcePath))
+            {
+                var StringData = string.Join("\n\r", File.ReadAllLines(SourcePath));
+                return StringData;
+            }
+            return "{}";
+        }
+
         public static void SaveSettings(SPDeployOptions RunSettings)
         {
+            SaveSettings(RunSettings, false);
+        }
+        public static void SaveSettings(SPDeployOptions RunSettings, bool IsXml)
+        {
+            if (!String.IsNullOrEmpty(RunSettings.Settings))
+            {
+                SettingsFileName = Path.Combine(SharePoint.SystemPath, "configs\\" + RunSettings.Settings);
+            }
+            if (!IsXml)
+            {
+                SettingsFileName = SettingsJsonFileName;
+            }
             var DecryptedPassword = (new SpSimpleAES()).DecryptString(RunSettings.password);
-            RunSettings.password = (new SpSimpleAES()).EncryptToString(DecryptedPassword);
+            if (!String.IsNullOrEmpty(DecryptedPassword))
+            {
+                RunSettings.password = (new SpSimpleAES()).EncryptToString(DecryptedPassword);
+            }
 
             var Serializer = new XmlSerializer(typeof(SPDeployOptions));
 
@@ -203,26 +268,55 @@ namespace sp_cmd_deploy
                 File.Delete(SettingsFileName);
             }
 
-            using (var fs = new FileStream(SettingsFileName, FileMode.OpenOrCreate))
+            if (IsXml)
             {
-                Serializer.Serialize(fs, RunSettings);
+                using (var fs = new FileStream(SettingsFileName, FileMode.OpenOrCreate))
+                {
+                    Serializer.Serialize(fs, RunSettings);
+                }
             }
+            else
+            {
+                var json = JsonConvert.SerializeObject(RunSettings);
+                var SW = File.CreateText(SettingsFileName);
+                SW.WriteLine(json);
+                SW.Close();
+            }
+
         }
 
         public static SPDeployOptions LoadSettings(SPDeployOptions RunSettings)
         {
+            if (!System.IO.File.Exists(SettingsFileName))
+            {
+                SettingsFileName = SettingsJsonFileName;
+            }
+
             if (!String.IsNullOrEmpty(RunSettings.Settings))
             {
-                SettingsFileName = "configs//" + RunSettings.Settings;
+                SettingsFileName = Path.Combine(SharePoint.SystemPath, "configs\\" + RunSettings.Settings);
             }
 
             if (System.IO.File.Exists(SettingsFileName))
             {
-                var Serializer = new XmlSerializer(typeof(SPDeployOptions));
-                //var RunSettings = new SPDeployOptions();
-                using (var Reader = new FileStream(SettingsFileName, FileMode.Open))
+
+                var ext = Path.GetExtension(SettingsFileName).ToLower();
+                if (ext == ".xml")
                 {
-                    RunSettings = (SPDeployOptions)Serializer.Deserialize(Reader);
+                    var Serializer = new XmlSerializer(typeof(SPDeployOptions));
+                    //var RunSettings = new SPDeployOptions();
+                    using (var Reader = new FileStream(SettingsFileName, FileMode.Open))
+                    {
+                        if (Reader.Length == 0)
+                        {
+                            return null;                            
+                        }
+                        RunSettings = (SPDeployOptions)Serializer.Deserialize(Reader);
+                    }
+                }
+                else
+                {
+                    RunSettings = JsonConvert.DeserializeObject<SPDeployOptions>(LoadDataFromFile(SettingsFileName));
                 }
                 return RunSettings;
             }
