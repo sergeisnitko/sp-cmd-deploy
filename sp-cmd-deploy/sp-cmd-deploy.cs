@@ -91,17 +91,24 @@ namespace SP.Cmd.Deploy
                 OfficeDevPnP.Core.AuthenticationManager am = new OfficeDevPnP.Core.AuthenticationManager();
                 using (var clientContext = am.GetADFSUserNameMixedAuthenticatedContext(options.url, options.login, options.password, options.domain, options.ADFSUrl, options.relyingParty, 600))
                 {
-                    var StartedDate = DateTime.Now;
+                    //var StartedDate = DateTime.Now;
                     clientContext.ExecutingWebRequest += delegate (object oSender, WebRequestEventArgs webRequestEventArgs)
                     {
-                        var CurrentTime = DateTime.Now;
-                        var DateDiff = (CurrentTime - StartedDate).TotalMinutes;
-
-                        if (DateDiff > 5)
+                        foreach (Cookie Cookie in webRequestEventArgs.WebRequestExecutor.WebRequest.CookieContainer.GetCookies(new Uri(options.url)))
                         {
-                            StartedDate = DateTime.Now;
-                            am.RefreshADFSUserNameMixedAuthenticatedContext(options.url, options.login, options.password, options.domain, options.ADFSUrl, options.relyingParty);
-                        }                        
+                            if (Cookie.Name == "FedAuth")
+                            {
+                                var Expires = Cookie.Expires;
+                                var CurrentTime = DateTime.Now;
+                                var DateDiff = (Expires - CurrentTime).TotalMinutes;
+
+                                if (DateDiff < 3)
+                                {
+                                    am.RefreshADFSUserNameMixedAuthenticatedContext(options.url, options.login, options.password, options.domain, options.ADFSUrl, options.relyingParty);
+                                }
+                            }
+                            
+                        }                    
                     };
 
                     Code(clientContext);
