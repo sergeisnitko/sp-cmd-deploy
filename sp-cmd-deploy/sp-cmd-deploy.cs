@@ -10,13 +10,14 @@ using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace SP.Cmd.Deploy
 {
 
     public static class SharePoint
     {
-        public static string SystemPath = Path.GetDirectoryName((new System.Uri(Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath);
+        public static string SystemPath = HttpUtility.UrlDecode(Path.GetDirectoryName((new System.Uri(Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath));
 
         public static string EncryptString(string Text)
         {
